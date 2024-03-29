@@ -112,88 +112,26 @@ public:
      *
      * @return A vector of Graph objects representing the permutation subgraphs.
      */
-    std::vector<Graph> generatePermutationSubgraphs()
+    bool isCycle(std::vector<int> inst)
     {
-        std::vector<Graph> subgraphs;
-        std::vector<std::vector<int>> allPermutations = generateAllPermutations();
-        for (std::vector<int> permutation : allPermutations)
+        for (int i = 0; i < inst.size() - 1; i++)
         {
-            Graph subgraph(numVertices);
-            bool hasEdge = true;
-            int i = 0;
-            while (hasEdge && i < permutation.size() - 1)
+            if (!isEdge(inst[i], inst[i + 1]))
             {
-                hasEdge = false;
-                if (isEdge(permutation[i], permutation[i + 1]))
-                {
-                    subgraph.addEdge(permutation[i], permutation[i + 1]);
-                    hasEdge = true;
-                } 
-                i++;
-            }
-            if (hasEdge)
-            {
-                subgraphs.push_back(subgraph);
+                return false;
             }
         }
-        return subgraphs; 
+        return isEdge(inst[inst.size() - 1], inst[0]);
     }
+
+
 
     /**
-     * @brief Overloaded equality operator for comparing two Graph objects.
-     *
-     * @param other The Graph object to compare with.
-     * @return true if the two Graph objects are equal, false otherwise.
+     * Generates all permutations of a given subset of integers.
+     * 
+     * @param subset The subset of integers to generate permutations from.
+     * @param permutations The vector to store the generated permutations.
      */
-    bool operator==(const Graph &other) const
-    {
-        if (numVertices != other.numVertices)
-            return false;
-
-        for (int i = 0; i < numVertices; i++)
-            for (int j = 0; j < numVertices; j++)
-                if (adjacencyMatrix[i][j] != other.adjacencyMatrix[i][j])
-                    return false;
-
-        return true;
-    }
-
-    /**
-     * @brief Represents a graph data structure.
-     */
-    Graph remapSubgraph()
-    {
-        int numVertices = 0;
-        for (int i = 0; i < adjacencyMatrix.size(); i++) // find valid vertex count
-        {
-            if (adjacencyMatrix[i][i] != -1)
-                numVertices++;
-        }
-
-        Graph newGraph(numVertices);
-
-        int newRow = 0, newCol = 0;
-        for (int i = 0; i < adjacencyMatrix.size(); i++) // copy valid vertices to new graph
-        {
-            if (adjacencyMatrix[i][i] != -1)
-            {
-                for (int j = 0; j < adjacencyMatrix.size(); j++)
-                {
-                    if (adjacencyMatrix[j][j] != -1)
-                    {
-                        newGraph.adjacencyMatrix[newRow][newCol] = adjacencyMatrix[i][j];
-                        newCol++;
-                    }
-                }
-                newRow++;
-                newCol = 0;
-            }
-        }
-        return newGraph;
-    }
-
-
-    // Gera permutações de um dado subconjunto
     void generatePermutations(std::vector<int> &subset, std::vector<std::vector<int>> &permutations)
     {
         std::sort(subset.begin(), subset.end());
@@ -203,7 +141,14 @@ public:
         } while (std::next_permutation(subset.begin(), subset.end()));
     }
 
-    
+    /**
+     * @brief Generates all permutations of subsets of a given vector.
+     * 
+     * This function generates all permutations of subsets of a given vector.
+     * It returns a vector of vectors, where each inner vector represents a permutation.
+     * 
+     * @return std::vector<std::vector<int>> - A vector of vectors representing all permutations of subsets.
+     */
     std::vector<std::vector<int>> generateAllPermutations()
     {
         int n = numVertices;
@@ -238,7 +183,6 @@ public:
 
             } while (std::prev_permutation(mask.begin(), mask.end()));
         }
-
         return allPermutations;
     }
 };
