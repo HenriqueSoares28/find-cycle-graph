@@ -86,6 +86,18 @@ public:
     }
 
     /**
+     * Generates a complete graph by adding edges between all pairs of vertices.
+     * The graph must already have the desired number of vertices.
+     */
+    void generateCompleteGraph() {
+        for (int i = 0; i < numVertices; ++i) {
+            for (int j = i + 1; j < numVertices; ++j) {
+                addEdge(i, j);
+            }
+        }
+    }
+
+    /**
      * @brief Prints the adjacency matrix representation of the graph.
      */
     void printGraph()
