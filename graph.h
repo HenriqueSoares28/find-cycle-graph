@@ -115,50 +115,28 @@ public:
     std::vector<Graph> generatePermutationSubgraphs()
     {
         std::vector<Graph> subgraphs;
-
-        // Gerar todas as combinações de 3 até numVertices
-        std::vector<int> vertexIndices(numVertices);              // Vetor de índices de vértices [0, 1, 2, ..., numVertices-1]
-        std::iota(vertexIndices.begin(), vertexIndices.end(), 0); // Preenche o vetor com valores consecutivos
-
-        // Para cada tamanho possível de subgrafo, de 3 a numVertices
-        for (int size = 3; size <= numVertices; ++size)
+        std::vector<std::vector<int>> allPermutations = generateAllPermutations();
+        for (std::vector<int> permutation : allPermutations)
         {
-            std::vector<bool> combSelector(numVertices, false);
-            std::fill(combSelector.begin(), combSelector.begin() + size, true);
-
-            // Gerar todas as combinações de vértices de tamanho 'size'
-            do
+            Graph subgraph(numVertices);
+            bool hasEdge = true;
+            int i = 0;
+            while (hasEdge && i < permutation.size() - 1)
             {
-                // Criar um novo grafo para a combinação atual
-                Graph subgraph(numVertices);
-
-                // Inicializar a matriz de adjacência do subgrafo com -1
-                for (auto &row : subgraph.adjacencyMatrix)
+                hasEdge = false;
+                if (isEdge(permutation[i], permutation[i + 1]))
                 {
-                    std::fill(row.begin(), row.end(), -1);
-                }
-
-                // Para cada vértice, verificar se ele está incluído na combinação atual
-                for (int i = 0; i < numVertices; ++i)
-                {
-                    if (combSelector[i])
-                    {
-                        for (int j = 0; j < numVertices; ++j)
-                        {
-                            if (combSelector[j])
-                            {
-                                // Se ambos os vértices estão incluídos, copiar o valor da aresta original
-                                subgraph.adjacencyMatrix[i][j] = (adjacencyMatrix[i][j] != 0) ? 1 : 0;
-                            }
-                        }
-                    }
-                }
-
+                    subgraph.addEdge(permutation[i], permutation[i + 1]);
+                    hasEdge = true;
+                } 
+                i++;
+            }
+            if (hasEdge)
+            {
                 subgraphs.push_back(subgraph);
-            } while (std::prev_permutation(combSelector.begin(), combSelector.end()));
+            }
         }
-
-        return subgraphs;
+        return subgraphs; 
     }
 
     /**
@@ -214,41 +192,53 @@ public:
         return newGraph;
     }
 
-    /**
-     * Checks if the graph contains a cycle.
-     * 
-     * @return true if the graph contains a cycle, false otherwise.
-     */
-    bool isCycle()
+
+    // Gera permutações de um dado subconjunto
+    void generatePermutations(std::vector<int> &subset, std::vector<std::vector<int>> &permutations)
     {
-        std::vector<int> visited(numVertices, 0);
-        std::stack<int> stack;
-        stack.push(0);
-        visited[0] = 1;
-        while (!stack.empty())
+        std::sort(subset.begin(), subset.end());
+        do
         {
-            int current = stack.top();
-            stack.pop();
-            for (int i = 0; i < numVertices; i++)
+            permutations.push_back(subset);
+        } while (std::next_permutation(subset.begin(), subset.end()));
+    }
+
+    
+    std::vector<std::vector<int>> generateAllPermutations()
+    {
+        int n = numVertices;
+        std::vector<std::vector<int>> allPermutations;
+
+        // Vetor original de 0 a n-1
+        std::vector<int> original(n);
+        for (int i = 0; i < n; ++i)
+        {
+            original[i] = i;
+        }
+
+        // Gerar subconjuntos de tamanho k e suas permutações
+        for (int k = 3; k <= n; ++k)
+        {
+            std::vector<bool> mask(n, false);
+            std::fill(mask.begin(), mask.begin() + k, true);
+
+            do
             {
-                if (adjacencyMatrix[current][i] == 1)
+                std::vector<int> subset;
+                for (int i = 0; i < n; ++i)
                 {
-                    if (visited[i] == 1)
+                    if (mask[i])
                     {
-                        bool allTrue = std::all_of(visited.begin(), visited.end(), [](bool b) { return b; });
-                        if(allTrue){
-                            return true;
-                        }
-                    }
-                    else if (visited[i] == 0)
-                    {
-                        visited[i] = 1;
-                        stack.push(i);
+                        subset.push_back(original[i]);
                     }
                 }
-            }
-            visited[current] = 2;
+
+                // Gerar e adicionar as permutações do subset atual
+                generatePermutations(subset, allPermutations);
+
+            } while (std::prev_permutation(mask.begin(), mask.end()));
         }
-        return false;
+
+        return allPermutations;
     }
 };
