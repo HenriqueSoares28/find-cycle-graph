@@ -1,14 +1,14 @@
-
 #include <vector>
 #include <iostream>
 #include <algorithm>
 #include <numeric>
+#include <stack>
 
 /**
  * @class Graph
- * @brief Represents a graph data structure.
+ * @brief Represents an undirected graph data structure.
  *
- * The Graph class provides methods to manipulate and operate on a graph.
+ * The Graph class provides methods to manipulate and operate on an undirected graph.
  */
 class Graph
 {
@@ -37,6 +37,7 @@ public:
         if (src >= 0 && src < numVertices && dest >= 0 && dest < numVertices)
         {
             adjacencyMatrix[src][dest] = 1;
+            adjacencyMatrix[dest][src] = 1; // Add the reverse edge for undirected graph
         }
     }
 
@@ -51,6 +52,7 @@ public:
         if (src >= 0 && src < numVertices && dest >= 0 && dest < numVertices)
         {
             adjacencyMatrix[src][dest] = weight;
+            adjacencyMatrix[dest][src] = weight; // Add the reverse edge for undirected graph
         }
     }
 
@@ -64,6 +66,7 @@ public:
         if (src >= 0 && src < numVertices && dest >= 0 && dest < numVertices)
         {
             adjacencyMatrix[src][dest] = 0;
+            adjacencyMatrix[dest][src] = 0; // Remove the reverse edge for undirected graph
         }
     }
 
@@ -91,9 +94,12 @@ public:
         {
             for (int j = 0; j < numVertices; j++)
             {
-                if(adjacencyMatrix[i][j] == -1){
+                if (adjacencyMatrix[i][j] == -1)
+                {
                     std::cout << "X ";
-                } else {
+                }
+                else
+                {
                     std::cout << adjacencyMatrix[i][j] << " ";
                 }
             }
@@ -102,53 +108,54 @@ public:
     }
 
     /**
-     * @brief Generates all subgraphs of the graph.
-     * @return A list of Graph objects representing all subgraphs.
+     * Generates permutation subgraphs.
+     *
+     * @return A vector of Graph objects representing the permutation subgraphs.
      */
-    std::vector<Graph> generateSubgraphs()
+    std::vector<Graph> generatePermutationSubgraphs()
     {
         std::vector<Graph> subgraphs;
 
-        // Iterate through all possible subsets of vertices
-        for (int subset = (1 << 3) - 1; subset < (1 << numVertices); subset++)
+        // Gerar todas as combinações de 3 até numVertices
+        std::vector<int> vertexIndices(numVertices);              // Vetor de índices de vértices [0, 1, 2, ..., numVertices-1]
+        std::iota(vertexIndices.begin(), vertexIndices.end(), 0); // Preenche o vetor com valores consecutivos
+
+        // Para cada tamanho possível de subgrafo, de 3 a numVertices
+        for (int size = 3; size <= numVertices; ++size)
         {
-            int numSelectedVertices = 0;
-            for (int i = 0; i < numVertices; i++)
+            std::vector<bool> combSelector(numVertices, false);
+            std::fill(combSelector.begin(), combSelector.begin() + size, true);
+
+            // Gerar todas as combinações de vértices de tamanho 'size'
+            do
             {
-                if (subset & (1 << i))
+                // Criar um novo grafo para a combinação atual
+                Graph subgraph(numVertices);
+
+                // Inicializar a matriz de adjacência do subgrafo com -1
+                for (auto &row : subgraph.adjacencyMatrix)
                 {
-                    numSelectedVertices++;
+                    std::fill(row.begin(), row.end(), -1);
                 }
-            }
-            if (numSelectedVertices >= 3)
-            {
-                Graph subgraph(numVertices); // Create a new graph for each subset
-                for (int i = 0; i < numVertices; i++)
+
+                // Para cada vértice, verificar se ele está incluído na combinação atual
+                for (int i = 0; i < numVertices; ++i)
                 {
-                    for (int j = 0; j < numVertices; j++)
+                    if (combSelector[i])
                     {
-                        if ((subset & (1 << i)) && (subset & (1 << j)))
+                        for (int j = 0; j < numVertices; ++j)
                         {
-                            if (isEdge(i, j))
+                            if (combSelector[j])
                             {
-                                // There's an edge between i and j, include it in the subgraph
-                                subgraph.addEdge(i, j);
+                                // Se ambos os vértices estão incluídos, copiar o valor da aresta original
+                                subgraph.adjacencyMatrix[i][j] = (adjacencyMatrix[i][j] != 0) ? 1 : 0;
                             }
-                            else
-                            {
-                                // No edge between i and j, set 0 in the adjacency matrix
-                                subgraph.removeEdge(i, j);
-                            }
-                        }
-                        else
-                        {
-                            // Vertex i or j is not in the subset, set -1 in the adjacency matrix
-                            subgraph.addEdge(i, j, -1);
                         }
                     }
                 }
-                subgraphs.push_back(subgraph); // Add the generated subgraph to the list
-            }
+
+                subgraphs.push_back(subgraph);
+            } while (std::prev_permutation(combSelector.begin(), combSelector.end()));
         }
 
         return subgraphs;
@@ -171,5 +178,77 @@ public:
                     return false;
 
         return true;
+    }
+
+    /**
+     * @brief Represents a graph data structure.
+     */
+    Graph remapSubgraph()
+    {
+        int numVertices = 0;
+        for (int i = 0; i < adjacencyMatrix.size(); i++) // find valid vertex count
+        {
+            if (adjacencyMatrix[i][i] != -1)
+                numVertices++;
+        }
+
+        Graph newGraph(numVertices);
+
+        int newRow = 0, newCol = 0;
+        for (int i = 0; i < adjacencyMatrix.size(); i++) // copy valid vertices to new graph
+        {
+            if (adjacencyMatrix[i][i] != -1)
+            {
+                for (int j = 0; j < adjacencyMatrix.size(); j++)
+                {
+                    if (adjacencyMatrix[j][j] != -1)
+                    {
+                        newGraph.adjacencyMatrix[newRow][newCol] = adjacencyMatrix[i][j];
+                        newCol++;
+                    }
+                }
+                newRow++;
+                newCol = 0;
+            }
+        }
+        return newGraph;
+    }
+
+    /**
+     * Checks if the graph contains a cycle.
+     * 
+     * @return true if the graph contains a cycle, false otherwise.
+     */
+    bool isCycle()
+    {
+        std::vector<int> visited(numVertices, 0);
+        std::stack<int> stack;
+        stack.push(0);
+        visited[0] = 1;
+        while (!stack.empty())
+        {
+            int current = stack.top();
+            stack.pop();
+            for (int i = 0; i < numVertices; i++)
+            {
+                if (adjacencyMatrix[current][i] == 1)
+                {
+                    if (visited[i] == 1)
+                    {
+                        bool allTrue = std::all_of(visited.begin(), visited.end(), [](bool b) { return b; });
+                        if(allTrue){
+                            return true;
+                        }
+                    }
+                    else if (visited[i] == 0)
+                    {
+                        visited[i] = 1;
+                        stack.push(i);
+                    }
+                }
+            }
+            visited[current] = 2;
+        }
+        return false;
     }
 };
