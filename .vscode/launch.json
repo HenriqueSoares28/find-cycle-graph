@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Codes/PAA/find-cycle-graph",
-      "program": "c:/Codes/PAA/find-cycle-graph/build/Debug/outDebug",
+      "cwd": "c:/Users/eldut/OneDrive/Documents/GitHub/find-cycle-graph",
+      "program": "c:/Users/eldut/OneDrive/Documents/GitHub/find-cycle-graph/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
