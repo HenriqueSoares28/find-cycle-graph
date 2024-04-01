@@ -1,0 +1,9 @@
+Number of Vertices,Number of Edges,Execution Time (ms),Number of Cycles
+3,3,0,6
+4,6,0,48
+5,10,0,300
+6,15,0,1920
+7,21,8,13650
+8,28,46,109536
+9,36,530,986328
+10,45,5998,9864000

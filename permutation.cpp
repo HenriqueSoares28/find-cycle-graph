@@ -1,8 +1,10 @@
 #include "graph.h"
-
+#include <iostream>
 #include <chrono>
+#include <fstream>
+#include <vector>
 
-void printPermutations(std::vector<std::vector<int>> permutations)
+void printPermutations(const std::vector<std::vector<int>>& permutations)
 {
     for (int i = 0; i < permutations.size(); i++)
     {
@@ -17,30 +19,43 @@ void printPermutations(std::vector<std::vector<int>> permutations)
 
 int main()
 {
-    Graph g(8);
-    g.generateCompleteGraph();
+    std::ofstream outputFile("results.csv");
+    if (!outputFile.is_open()) {
+        std::cerr << "Error: Unable to open output file." << std::endl;
+        return 1;
+    }
+    outputFile << "Number of Vertices,Number of Edges,Execution Time (ms),Number of Cycles\n";
 
-    auto start = std::chrono::high_resolution_clock::now();
-
-    // gerar subgrafos
-    std::vector<std::vector<int>> permutations = g.generateAllPermutations();
-    // printPermutations(permutations);
-    int cycle = 0;
-    for (std::vector<int> p : permutations)
+    for (int n = 3; n <= 10; ++n)
     {
-        if (g.isCycle(p))
+        Graph g(n);
+        g.generateCompleteGraph();
+
+        auto start = std::chrono::steady_clock::now();
+
+        std::vector<std::vector<int>> permutations = g.generateAllPermutations();
+        // printPermutations(permutations);
+
+        int cycle = 0;
+        for (const std::vector<int>& p : permutations)
         {
-            cycle++;
-            std::cout << "Ciclo " << cycle << ": ";
-            for (int i = 0; i < p.size(); i++)
+            if (g.isCycle(p))
             {
-                std::cout << p[i] << " ";
+                cycle++;
             }
-            std::cout << std::endl;
         }
+
+        auto end = std::chrono::steady_clock::now();
+        std::chrono::milliseconds diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        double execTime = diff.count();
+
+        int numEdges = n * (n - 1) / 2;
+
+        outputFile << n << "," << numEdges << "," << execTime << "," << cycle << "\n";
     }
 
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> diff = end - start;
-    std::cout << "Tempo de execucao: " << diff.count() << "s" << std::endl;
+    outputFile.close();
+    std::cout << "Results saved to 'results.csv'." << std::endl;
+
+    return 0;
 }
